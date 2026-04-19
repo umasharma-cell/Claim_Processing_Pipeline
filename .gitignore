@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+venv/
+Document Processing Pipeline Assignment.pdf
+task_prompt.md
+final_image_protected.pdf

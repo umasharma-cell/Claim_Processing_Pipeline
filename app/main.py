@@ -14,9 +14,9 @@ logging.basicConfig(
 )
 
 app = FastAPI(
-    title="Claim Processing Pipeline",
-    description="AI-powered document processing pipeline for insurance claim extraction using LangGraph",
-    version="1.0.0",
+    title="Document Processing Pipeline",
+    description="AI-powered PDF document analysis and summary generation using LangGraph",
+    version="2.0.0",
 )
 
 app.add_middleware(

@@ -1,13 +1,13 @@
 "use client";
 
-import { useClaimProcessor } from "@/hooks/useClaimProcessor";
+import { useDocumentProcessor } from "@/hooks/useClaimProcessor";
 import UploadForm from "@/components/UploadForm";
 import ProcessingStatus from "@/components/ProcessingStatus";
 import ResultsPanel from "@/components/ResultsPanel";
 import ErrorDisplay from "@/components/ErrorDisplay";
 
 export default function Home() {
-  const { state, submitClaim, reset } = useClaimProcessor();
+  const { state, submitDocument, reset } = useDocumentProcessor();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -20,8 +20,8 @@ export default function Home() {
             </svg>
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-gray-900">Claim Processing Pipeline</h1>
-            <p className="text-xs text-gray-500">AI-powered document extraction</p>
+            <h1 className="text-lg font-semibold text-gray-900">Document Processing Pipeline</h1>
+            <p className="text-xs text-gray-500">AI-powered PDF analysis and summary</p>
           </div>
         </div>
       </header>
@@ -30,9 +30,9 @@ export default function Home() {
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-8">
         {state.status === "idle" && (
           <div className="flex flex-col items-center pt-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Process a Claim Document</h2>
-            <p className="text-sm text-gray-500 mb-8">Upload a PDF to extract identity, discharge summary, and billing information</p>
-            <UploadForm onSubmit={submitClaim} />
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Analyze a Document</h2>
+            <p className="text-sm text-gray-500 mb-8">Upload a PDF to get an AI-generated summary and key topics</p>
+            <UploadForm onSubmit={submitDocument} />
           </div>
         )}
 

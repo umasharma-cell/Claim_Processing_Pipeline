@@ -2,12 +2,12 @@ import { ProcessResponse } from "./types";
 
 const API_BASE = "http://localhost:8000";
 
-export async function processClaim(
-  claimId: string,
+export async function processDocument(
+  documentId: string,
   file: File
 ): Promise<ProcessResponse> {
   const formData = new FormData();
-  formData.append("claim_id", claimId);
+  formData.append("document_id", documentId);
   formData.append("file", file);
 
   const response = await fetch(`${API_BASE}/api/process`, {

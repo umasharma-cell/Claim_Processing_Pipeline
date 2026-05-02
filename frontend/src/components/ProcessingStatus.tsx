@@ -4,11 +4,10 @@ import { useState, useEffect } from "react";
 
 const STAGES = [
   "Parsing PDF...",
-  "Classifying pages...",
-  "Extracting identity data...",
-  "Extracting discharge summary...",
-  "Extracting bill items...",
-  "Validating results...",
+  "Extracting text from pages...",
+  "Analyzing document content...",
+  "Generating summary...",
+  "Identifying key topics...",
 ];
 
 export default function ProcessingStatus() {
@@ -38,7 +37,7 @@ export default function ProcessingStatus() {
       </div>
 
       <div>
-        <p className="text-lg font-medium text-gray-800">Processing your claim</p>
+        <p className="text-lg font-medium text-gray-800">Analyzing your document</p>
         <p className="text-sm text-gray-500 mt-1">This may take up to a minute</p>
       </div>
 

@@ -3,11 +3,11 @@
 import { useState, useRef, DragEvent } from "react";
 
 interface UploadFormProps {
-  onSubmit: (claimId: string, file: File) => void;
+  onSubmit: (documentId: string, file: File) => void;
 }
 
 export default function UploadForm({ onSubmit }: UploadFormProps) {
-  const [claimId, setClaimId] = useState("");
+  const [documentId, setDocumentId] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -39,34 +39,34 @@ export default function UploadForm({ onSubmit }: UploadFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (claimId.trim() && file) {
-      onSubmit(claimId.trim(), file);
+    if (documentId.trim() && file) {
+      onSubmit(documentId.trim(), file);
     }
   };
 
-  const generateClaimId = () => {
-    setClaimId(`CLM-${Date.now().toString(36).toUpperCase()}`);
+  const generateDocumentId = () => {
+    setDocumentId(`DOC-${Date.now().toString(36).toUpperCase()}`);
   };
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-xl mx-auto space-y-6">
-      {/* Claim ID */}
+      {/* Document ID */}
       <div>
-        <label htmlFor="claimId" className="block text-sm font-medium text-gray-700 mb-1">
-          Claim ID
+        <label htmlFor="documentId" className="block text-sm font-medium text-gray-700 mb-1">
+          Document ID
         </label>
         <div className="flex gap-2">
           <input
-            id="claimId"
+            id="documentId"
             type="text"
-            value={claimId}
-            onChange={(e) => setClaimId(e.target.value)}
-            placeholder="e.g. CLM-2024-001"
+            value={documentId}
+            onChange={(e) => setDocumentId(e.target.value)}
+            placeholder="e.g. DOC-2024-001"
             className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           <button
             type="button"
-            onClick={generateClaimId}
+            onClick={generateDocumentId}
             className="px-4 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
           >
             Auto
@@ -127,10 +127,10 @@ export default function UploadForm({ onSubmit }: UploadFormProps) {
       {/* Submit */}
       <button
         type="submit"
-        disabled={!claimId.trim() || !file}
+        disabled={!documentId.trim() || !file}
         className="w-full py-3 px-4 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
       >
-        Process Claim
+        Process Document
       </button>
     </form>
   );

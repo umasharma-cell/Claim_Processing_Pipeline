@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { ProcessResponse } from "@/lib/types";
-import { processClaim } from "@/lib/api";
+import { processDocument } from "@/lib/api";
 
 type ProcessingState =
   | { status: "idle" }
@@ -10,13 +10,13 @@ type ProcessingState =
   | { status: "success"; data: ProcessResponse }
   | { status: "error"; message: string };
 
-export function useClaimProcessor() {
+export function useDocumentProcessor() {
   const [state, setState] = useState<ProcessingState>({ status: "idle" });
 
-  const submitClaim = useCallback(async (claimId: string, file: File) => {
+  const submitDocument = useCallback(async (documentId: string, file: File) => {
     setState({ status: "processing" });
     try {
-      const data = await processClaim(claimId, file);
+      const data = await processDocument(documentId, file);
       setState({ status: "success", data });
     } catch (err) {
       const message =
@@ -29,5 +29,5 @@ export function useClaimProcessor() {
     setState({ status: "idle" });
   }, []);
 
-  return { state, submitClaim, reset };
+  return { state, submitDocument, reset };
 }

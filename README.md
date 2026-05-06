@@ -1,5 +1,7 @@
 # Document Processing Pipeline
 
+**[Live Demo](https://claim-processing-pipeline.vercel.app)**
+
 AI-powered PDF document analysis and summary generation using **FastAPI**, **LangGraph**, and **Google Gemini**.
 
 Upload any PDF and get an AI-generated summary, key topics, and document classification.

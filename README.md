@@ -9,7 +9,7 @@ Upload any PDF and get an AI-generated summary, key topics, and document classif
 | Service  | URL |
 |----------|-----|
 | Backend (API)  | [https://claim-processing-pipeline-l56y.onrender.com](https://claim-processing-pipeline-l56y.onrender.com) |
-| Frontend (UI)  | *Deploying on Vercel — link will be updated* |
+| Frontend (UI)  | [https://claim-processing-pipeline.vercel.app](https://claim-processing-pipeline.vercel.app) |
 | API Docs       | [https://claim-processing-pipeline-l56y.onrender.com/docs](https://claim-processing-pipeline-l56y.onrender.com/docs) |
 | Health Check   | [https://claim-processing-pipeline-l56y.onrender.com/health](https://claim-processing-pipeline-l56y.onrender.com/health) |
 

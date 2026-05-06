@@ -1,210 +1,221 @@
-# Claim Processing Pipeline
+# Document Processing Pipeline
 
-AI-powered document processing pipeline for insurance claim extraction using **FastAPI** and **LangGraph**.
+AI-powered PDF document analysis and summary generation using **FastAPI**, **LangGraph**, and **Google Gemini**.
+
+Upload any PDF and get an AI-generated summary, key topics, and document classification.
+
+## Live Demo
+
+| Service  | URL |
+|----------|-----|
+| Backend (API)  | [https://claim-processing-pipeline-l56y.onrender.com](https://claim-processing-pipeline-l56y.onrender.com) |
+| Frontend (UI)  | *Deploying on Vercel — link will be updated* |
+| API Docs       | [https://claim-processing-pipeline-l56y.onrender.com/docs](https://claim-processing-pipeline-l56y.onrender.com/docs) |
+| Health Check   | [https://claim-processing-pipeline-l56y.onrender.com/health](https://claim-processing-pipeline-l56y.onrender.com/health) |
 
 ## Architecture
 
 ```
-                         ┌─────────────────┐
-                         │   POST /api/    │
-                         │    process      │
-                         └────────┬────────┘
-                                  │
-                         ┌────────▼────────┐
-                         │  PDF Parser +   │
-                         │  OCR Fallback   │
-                         └────────┬────────┘
-                                  │
-                         ┌────────▼────────┐
-                         │  Segregator     │
-                         │  Agent (AI)     │
-                         └──┬─────┬─────┬──┘
-                            │     │     │
-              ┌─────────────┘     │     └─────────────┐
-              │                   │                   │
-     ┌────────▼────────┐ ┌───────▼────────┐ ┌────────▼────────┐
-     │   ID Agent      │ │  Discharge     │ │  Itemized Bill  │
-     │  (identity,     │ │  Summary Agent │ │  Agent          │
-     │   policy)       │ │  (diagnosis,   │ │  (line items,   │
-     │                 │ │   dates)       │ │   totals)       │
-     └────────┬────────┘ └───────┬────────┘ └────────┬────────┘
-              │                   │                   │
-              └─────────────┬─────┘─────────────┬─────┘
-                            │                   │
-                         ┌──▼───────────────────▼──┐
-                         │      Aggregator         │
-                         │   (merge + validate)    │
-                         └────────────┬────────────┘
-                                      │
-                                ┌─────▼─────┐
-                                │  JSON     │
-                                │  Response │
-                                └───────────┘
+                     ┌─────────────────────┐
+                     │   Next.js Frontend  │
+                     │   (Vercel)          │
+                     └──────────┬──────────┘
+                                │ POST /api/process
+                     ┌──────────▼──────────┐
+                     │   FastAPI Backend   │
+                     │   (Render)          │
+                     └──────────┬──────────┘
+                                │
+                     ┌──────────▼──────────┐
+                     │   PDF Parser +      │
+                     │   OCR Fallback      │
+                     │   (PyMuPDF/Gemini)  │
+                     └──────────┬──────────┘
+                                │
+                     ┌──────────▼──────────┐
+                     │   Summary Agent     │
+                     │   (Gemini LLM)      │
+                     └──────────┬──────────┘
+                                │
+                     ┌──────────▼──────────┐
+                     │   JSON Response     │
+                     │   (title, summary,  │
+                     │    topics, type)    │
+                     └─────────────────────┘
 ```
 
-### LangGraph Flow
+### LangGraph Pipeline
 
 ```
-START → pdf_parse_node → segregator_node → ┬→ id_agent_node          ─┬→ aggregator_node → END
-                                           ├→ discharge_summary_node ─┤
-                                           └→ itemized_bill_node     ─┘
+START → pdf_parse_node → summary_node → END
 ```
 
-## How Segregator Classification Works
+- **pdf_parse_node**: Extracts text from each PDF page using PyMuPDF. Falls back to Gemini Vision OCR for scanned/image pages (< 50 chars of text).
+- **summary_node**: Sends combined page text to Google Gemini, returns a structured summary with title, description, key topics, and document type.
 
-The Segregator Agent uses an LLM (GPT-4o by default) to classify each PDF page into one of 9 document types:
+## Tech Stack
 
-1. **Per-page text extraction**: Each page's text is extracted via direct PDF parsing (PyMuPDF). If direct extraction yields too little text (< 50 chars), OCR is used as a fallback via pytesseract.
+| Layer     | Technology |
+|-----------|------------|
+| Frontend  | Next.js 16, React 19, Tailwind CSS v4, TypeScript |
+| Backend   | FastAPI, Python 3.11 |
+| AI/LLM    | Google Gemini (via LangChain), LangGraph |
+| PDF       | PyMuPDF (text extraction), Gemini Vision (OCR fallback) |
+| Deploy    | Vercel (frontend), Render (backend) |
 
-2. **AI classification**: The extracted text is sent to the LLM with a structured prompt that defines the 9 document categories. The LLM returns a JSON with `document_type`, `confidence` score, and `rationale`.
-
-3. **Deterministic routing**: The classification is post-processed with a static routing map (`DOC_TYPE_TO_AGENT`) that assigns each document type to the correct extraction agent. This makes routing deterministic and auditable.
-
-4. **Selective dispatch**: Only the pages assigned to each agent are sent to that agent — the full PDF is never passed to individual extractors.
-
-## Setup
+## Setup (Local Development)
 
 ### Prerequisites
 
-- Python 3.10+
-- [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) installed and on PATH
+- Python 3.11+
+- Node.js 18+
 - Google Gemini API key
 
-### Installation
+### Backend
 
 ```bash
 # Clone and enter the project
 cd Claim_Processing_Pipeline
 
-# Create virtual environment (recommended)
+# Create virtual environment
 python -m venv venv
 source venv/bin/activate    # Linux/Mac
 venv\Scripts\activate       # Windows
 
 # Install dependencies
 pip install -r requirements.txt
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env and add your GOOGLE_API_KEY
+
+# Run the backend
+python -m uvicorn app.main:app --reload
 ```
+
+Backend will be available at `http://localhost:8000`.
+
+### Frontend
+
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Run the dev server
+npm run dev
+```
+
+Frontend will be available at `http://localhost:3000`.
 
 ### Environment Variables
 
-Create a `.env` file from the example:
+#### Backend (.env)
+
+| Variable       | Description                     | Default            |
+|----------------|---------------------------------|--------------------|
+| `GOOGLE_API_KEY` | Google Gemini API key          | *(required)*       |
+| `GEMINI_MODEL`   | Gemini model name              | `gemini-2.0-flash` |
+| `LOG_LEVEL`      | Logging level                  | `INFO`             |
+| `FRONTEND_URL`   | Deployed frontend URL (CORS)   | *(optional)*       |
+
+#### Frontend
+
+| Variable              | Description              | Default                  |
+|-----------------------|--------------------------|--------------------------|
+| `NEXT_PUBLIC_API_URL` | Backend API base URL     | `http://localhost:8000`  |
+
+## API
+
+### POST /api/process
+
+Process a PDF document and return an AI-generated summary.
+
+**Request:** `multipart/form-data`
+
+| Field        | Type   | Description              |
+|--------------|--------|--------------------------|
+| `document_id` | string | Unique document identifier |
+| `file`        | file   | PDF file to process       |
+
+**cURL Example:**
 
 ```bash
-cp .env.example .env
+curl -X POST https://claim-processing-pipeline-l56y.onrender.com/api/process \
+  -F "document_id=DOC-001" \
+  -F "file=@document.pdf"
 ```
 
-Edit `.env` and set your values:
-
-| Variable        | Description                        | Default          |
-|-----------------|------------------------------------|------------------|
-| `GOOGLE_API_KEY`| Your Google Gemini API key         | *(required)*     |
-| `GEMINI_MODEL`  | Gemini model to use                | `gemini-2.0-flash`|
-| `TESSERACT_CMD` | Path to tesseract binary           | `tesseract`  |
-| `LOG_LEVEL`     | Logging level (DEBUG/INFO/WARNING) | `INFO`       |
-
-## Run
-
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-The API will be available at `http://localhost:8000`.
-
-- Swagger UI: `http://localhost:8000/docs`
-- Health check: `GET http://localhost:8000/health`
-
-## Test
-
-```bash
-# Run all tests
-python -m pytest tests/ -v
-
-# Run specific test files
-python -m pytest tests/test_routing.py -v
-python -m pytest tests/test_bill_calculation.py -v
-python -m pytest tests/test_schemas.py -v
-python -m pytest tests/test_integration.py -v
-```
-
-## Sample API Request
-
-### cURL
-
-```bash
-curl -X POST http://localhost:8000/api/process \
-  -F "claim_id=CLM-2024-001" \
-  -F "file=@final_image_protected.pdf"
-```
-
-### Python
+**Python Example:**
 
 ```python
 import requests
 
 response = requests.post(
-    "http://localhost:8000/api/process",
-    data={"claim_id": "CLM-2024-001"},
-    files={"file": open("final_image_protected.pdf", "rb")},
+    "https://claim-processing-pipeline-l56y.onrender.com/api/process",
+    data={"document_id": "DOC-001"},
+    files={"file": open("document.pdf", "rb")},
 )
 print(response.json())
 ```
 
-### Sample Response
+**Response:**
 
 ```json
 {
-  "claim_id": "CLM-2024-001",
+  "document_id": "DOC-001",
   "status": "success",
-  "documents": {
-    "page_classification": [
-      {"page_number": 1, "document_type": "identity_document", "confidence": 0.92},
-      {"page_number": 2, "document_type": "discharge_summary", "confidence": 0.88},
-      {"page_number": 3, "document_type": "itemized_bill", "confidence": 0.95}
-    ],
-    "routing": {
-      "id_agent_pages": [1],
-      "discharge_summary_pages": [2],
-      "itemized_bill_pages": [3]
-    }
-  },
-  "extracted_data": {
-    "identity": {
-      "patient_name": "John Doe",
-      "date_of_birth": "1985-03-15",
-      "id_numbers": ["GOV123456"],
-      "policy_details": {
-        "policy_number": "POL-789",
-        "insurer": "HealthCare Inc.",
-        "plan_name": "Premium Gold"
-      }
-    },
-    "discharge_summary": {
-      "diagnosis": ["Acute Appendicitis"],
-      "admission_date": "2024-01-10",
-      "discharge_date": "2024-01-13",
-      "physicians": ["Dr. Jane Smith"]
-    },
-    "itemized_bill": {
-      "items": [
-        {"description": "Room Charges", "quantity": 3, "unit_price": 500.0, "amount": 1500.0},
-        {"description": "Surgery", "quantity": 1, "unit_price": 5000.0, "amount": 5000.0}
-      ],
-      "reported_total": 6500.0,
-      "calculated_total": 6500.0,
-      "currency": "USD"
-    }
-  },
-  "validation": {
-    "total_consistency_check": true,
-    "notes": []
-  },
+  "title": "Mobile App Development Proposal",
+  "summary": "This document outlines a proposal for building a cross-platform mobile application. It covers the project scope, timeline, technology stack (React Native), and estimated budget of $45,000. The proposal is addressed to Acme Corp from DevStudio Inc.",
+  "key_topics": [
+    "Mobile App Development",
+    "React Native",
+    "Project Proposal",
+    "Budget Estimation"
+  ],
+  "document_type": "Business Proposal",
   "metadata": {
     "page_count": 3,
-    "ocr_pages": [1, 2],
-    "processing_time_ms": 12345.67
+    "ocr_pages": [],
+    "processing_time_ms": 4300.50
   }
 }
 ```
+
+### GET /health
+
+Health check endpoint.
+
+```bash
+curl https://claim-processing-pipeline-l56y.onrender.com/health
+# {"status": "healthy"}
+```
+
+## Deployment
+
+### Backend (Render)
+
+1. Create a new **Web Service** on [Render](https://render.com)
+2. Connect your GitHub repository
+3. Set the following:
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+4. Add environment variables:
+   - `PYTHON_VERSION` = `3.11.12`
+   - `GOOGLE_API_KEY` = your Gemini API key
+   - `GEMINI_MODEL` = `gemini-2.0-flash`
+   - `LOG_LEVEL` = `INFO`
+   - `FRONTEND_URL` = your Vercel frontend URL (after deploying frontend)
+
+### Frontend (Vercel)
+
+1. Create a new project on [Vercel](https://vercel.com)
+2. Connect your GitHub repository
+3. Set **Root Directory** to `frontend`
+4. Add environment variable:
+   - `NEXT_PUBLIC_API_URL` = `https://claim-processing-pipeline-l56y.onrender.com`
+5. Deploy
 
 ## Project Structure
 
@@ -219,10 +230,7 @@ Claim_Processing_Pipeline/
 │   │   └── routes.py            # POST /api/process endpoint
 │   ├── agents/
 │   │   ├── __init__.py
-│   │   ├── segregator.py        # Page classification agent
-│   │   ├── id_agent.py          # Identity extraction agent
-│   │   ├── discharge_agent.py   # Discharge summary agent
-│   │   └── bill_agent.py        # Itemized bill agent
+│   │   └── summary_agent.py     # Document summary agent (Gemini)
 │   ├── graph/
 │   │   ├── __init__.py
 │   │   └── workflow.py          # LangGraph pipeline definition
@@ -231,18 +239,42 @@ Claim_Processing_Pipeline/
 │   │   └── schemas.py           # Pydantic request/response models
 │   └── services/
 │       ├── __init__.py
-│       ├── pdf_parser.py        # PDF text extraction
-│       └── ocr.py               # OCR fallback service
+│       ├── pdf_parser.py        # PDF text extraction (PyMuPDF)
+│       └── ocr.py               # OCR fallback (Gemini Vision)
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── page.tsx         # Main page
+│   │   │   ├── layout.tsx       # Root layout
+│   │   │   └── globals.css      # Global styles
+│   │   ├── components/
+│   │   │   ├── UploadForm.tsx   # PDF upload with drag-and-drop
+│   │   │   ├── ProcessingStatus.tsx  # Loading spinner
+│   │   │   ├── ResultsPanel.tsx # Results container
+│   │   │   ├── SummaryCard.tsx  # Summary display card
+│   │   │   └── ErrorDisplay.tsx # Error state
+│   │   ├── hooks/
+│   │   │   └── useClaimProcessor.ts  # State management hook
+│   │   └── lib/
+│   │       ├── api.ts           # API client
+│   │       └── types.ts         # TypeScript interfaces
+│   ├── package.json
+│   └── tsconfig.json
 ├── tests/
-│   ├── __init__.py
-│   ├── conftest.py
-│   ├── test_routing.py          # Page routing logic tests
-│   ├── test_bill_calculation.py # Total calculation tests
-│   ├── test_schemas.py          # Response schema tests
-│   └── test_integration.py      # API endpoint integration tests
-├── final_image_protected.pdf    # Sample test PDF
+│   ├── test_routing.py
+│   ├── test_bill_calculation.py
+│   ├── test_schemas.py
+│   └── test_integration.py
 ├── requirements.txt
-├── pytest.ini
+├── .python-version              # Python 3.11 for Render
 ├── .env.example
 └── README.md
 ```
+
+## How It Works
+
+1. **User uploads a PDF** via the Next.js frontend
+2. **FastAPI receives** the file and passes it to the LangGraph pipeline
+3. **PDF Parser** extracts text from each page using PyMuPDF; falls back to Gemini Vision OCR for scanned pages
+4. **Summary Agent** sends the combined text to Google Gemini, which returns a structured analysis: title, summary, key topics, and document type
+5. **Response** is sent back to the frontend and displayed in a clean card layout
